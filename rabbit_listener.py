@@ -1,7 +1,7 @@
 import logging
 import pika
 import time
-from ffmpeg_runner import Ffmpeg_rtsp
+from ffmpeg_runner import Ffmpeg_rtsp, Create_process_to_ffmpeg
 import ast
 from config import RABBITMQ_LOGIN, RABBITMQ_IP, RABBITMQ_PASSWORD, RABBITMQ_PORT
 
@@ -46,9 +46,9 @@ class Rabbit_listener(Rabbit_base):
         try:
             str_data = data.decode('utf-8')
             data = ast.literal_eval(str_data)
-            Ffmpeg_rtsp(rtsp_url=data['rtsp_url'], output_url=data['output_url']).add_rtsp_camera_to_rtsp_server()
+            Create_process_to_ffmpeg(rtsp_url=data['rtsp_url'], output_url=data['output_url']).create_process_to_ffmpeg()
         except KeyError:
-            Ffmpeg_rtsp(rtsp_url=data['rtsp_url']).add_rtsp_camera_to_rtsp_server()
+            Create_process_to_ffmpeg(rtsp_url=data['rtsp_url']).create_process_to_ffmpeg()
 
     def get_message(self):
         try:
