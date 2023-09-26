@@ -10,7 +10,7 @@ class Ffmpeg_rtsp:
         self.__output_url = output_url
 
     def __str__(self):
-        return f'ffmpeg {self.__transport} -i {self.__rtsp_url} -codec copy -f flv -flvflags no_duration_filesize -f rtsp {self.__output_url}'
+        return f'ffmpeg {self.__transport} -i {self.__rtsp_url} -codec copy -f rtsp {self.__output_url}'
 
     def add_rtsp_camera_to_rtsp_server(self):
         args = shlex.split(self.__str__())
