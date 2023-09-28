@@ -1,9 +1,13 @@
 import logging
 import pika
 import time
-from ffmpeg_runner import Ffmpeg_rtsp, Create_process_to_ffmpeg
+from ffmpeg_runner import Ffmpeg_rtsp, Create_process_to_ffmpeg, Terminate_task_for_ffmpeg
 import ast
-from config import RABBITMQ_LOGIN, RABBITMQ_IP, RABBITMQ_PASSWORD, RABBITMQ_PORT
+from config import RABBITMQ_LOGIN, RABBITMQ_IP, RABBITMQ_PASSWORD, RABBITMQ_PORT, RABBITMQ_QUEUE_LISTENER, RABBITMQ_QUEUE_SENDER, SERVICE_NAME
+from logger_ import LOGGER, extra_name
+import time
+
+logger = LOGGER
 
 
 class Rabbit_base:
@@ -46,14 +50,21 @@ class Rabbit_listener(Rabbit_base):
         try:
             str_data = data.decode('utf-8')
             data = ast.literal_eval(str_data)
-            Create_process_to_ffmpeg(rtsp_url=data['rtsp_url'], output_url=data['output_url']).create_process_to_ffmpeg()
+            command = data['command']
+            if command == 'start':
+
+                Create_process_to_ffmpeg(rtsp_url=data['data']['rtsp_url'],
+                                         output_url=data['data']['output_url']).create_process_to_ffmpeg()
+            elif command == 'stop':
+                Terminate_task_for_ffmpeg(output_url=data['data']['output_url']).Kill_process()
+
         except KeyError:
-            Create_process_to_ffmpeg(rtsp_url=data['rtsp_url']).create_process_to_ffmpeg()
+            return logger.error(msg=f'{SERVICE_NAME}: Отправленные данные не валидны!',
+                               extra={extra_name: f'Сервис получил следующие данные: {data}'})
 
     def get_message(self):
         try:
-            self.channel.queue_declare(queue='/dev-queue')
-            self.channel.basic_consume(queue='dev-queue',
+            self.channel.basic_consume(queue=RABBITMQ_QUEUE_LISTENER,
                                        auto_ack=True,
                                        on_message_callback=self.pr)
             self.channel.start_consuming()
@@ -72,6 +83,14 @@ class Rabbit_listener(Rabbit_base):
             logging.warning('Error:\npika.exceptions.ConnectionWrongStateError\nReconnect to RabbitMQ')
             time.sleep(3)
             self.connect()
+
+
+class Rabbit_sender(Rabbit_base):
+    def send_message(self):
+        self.connect()
+        if self.connection:
+            self.channel.basic_publish(exchange='',
+                                       routing_key=RABBITMQ_QUEUE_SENDER, body=self.message)
 
 
 if __name__ == '__main__':
