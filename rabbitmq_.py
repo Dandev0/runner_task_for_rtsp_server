@@ -65,7 +65,7 @@ class Rabbit_listener(Rabbit_base):
     def get_message(self):
         try:
             self.connect()
-            self.channel.basic_consume(queue='dev-queue',
+            self.channel.basic_consume(queue=RABBITMQ_QUEUE_LISTENER,
                                        auto_ack=True,
                                        on_message_callback=self.pr)
             self.channel.start_consuming()
@@ -91,7 +91,7 @@ class Rabbit_sender(Rabbit_base):
         self.connect()
         if self.connection:
             self.channel.basic_publish(exchange='',
-                                       routing_key='log_queue', body=self.message)
+                                       routing_key=RABBITMQ_QUEUE_SENDER, body=self.message)
 
 
 if __name__ == '__main__':
