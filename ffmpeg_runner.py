@@ -5,6 +5,7 @@ from logger_ import LOGGER, extra_name
 from config import RABBITMQ_IP, RABBITMQ_LOGIN
 import psutil
 import os
+import signal
 
 logger = LOGGER
 
@@ -41,12 +42,14 @@ class Create_process_to_ffmpeg(Ffmpeg_rtsp):
 
 class Terminate_task_for_ffmpeg(Ffmpeg_rtsp):
     def Kill_process(self):
+        print(multiprocessing.active_children())
         process = self.get_process(name=self.output_url)
         if process is not None:
-            pname = psutil.Process(process.pid)
-            cpid = pname.get_children(recursive=True)
-            for pid in cpid:
-                os.kill(pid.pid, 9)
+            process_ = subprocess.Popen(['pgrep','-P', str(process.pid) ], stdout=subprocess.PIPE,universal_newlines=True)
+            output = process_.communicate()
+            for i in output:
+                if i is not None:
+                    os.kill(int(i), 9)
             process.kill()
             return logger.info(msg=f'Процесс был остановлен!',
                                extra={extra_name: f'Processname: {process}'})

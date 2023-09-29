@@ -26,7 +26,7 @@ class Rabbit_base:
                 self.channel = self.connection.channel()
                 if self.connection:
                     logging.warning('Connection to RabbitMQ is UP!')
-                self.get_message()
+                    return self.connection
 
         except pika.exceptions.AMQPConnectionError:
             logging.warning('Error:\npika.exceptions.AMQPConnectionError\nReconnect to RabbitMQ')
@@ -64,7 +64,8 @@ class Rabbit_listener(Rabbit_base):
 
     def get_message(self):
         try:
-            self.channel.basic_consume(queue=RABBITMQ_QUEUE_LISTENER,
+            self.connect()
+            self.channel.basic_consume(queue='dev-queue',
                                        auto_ack=True,
                                        on_message_callback=self.pr)
             self.channel.start_consuming()
@@ -90,8 +91,8 @@ class Rabbit_sender(Rabbit_base):
         self.connect()
         if self.connection:
             self.channel.basic_publish(exchange='',
-                                       routing_key=RABBITMQ_QUEUE_SENDER, body=self.message)
+                                       routing_key='log_queue', body=self.message)
 
 
 if __name__ == '__main__':
-    Rabbit_listener().connect()
+    Rabbit_listener().get_message()
