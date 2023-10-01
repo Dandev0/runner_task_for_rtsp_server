@@ -1,3 +1,4 @@
+import json
 import logging
 from logging import StreamHandler, Formatter
 import sys
@@ -30,8 +31,9 @@ class Myhandler(logging.Handler):
     def emit(self, record):
         from rabbitmq_ import Rabbit_sender
         reserved_keys = record.__dict__
-        self.response_string = f"{SERVICE_NAME}: [{reserved_keys['asctime']}: {reserved_keys['levelname']}]{reserved_keys['msg']} ------ {reserved_keys[extra_name]}"
-        Rabbit_sender(message=self.response_string).send_message()
+        self.response_string = {"service-name": SERVICE_NAME, "level_event": reserved_keys['levelname'], "message": reserved_keys['msg'], "more_information": reserved_keys[extra_name], "datetime": reserved_keys['asctime']}
+        self.json_data = json.dumps(self.response_string)
+        Rabbit_sender(message=self.json_data).send_message()
 
 
 extra_name = 'more_informations'
