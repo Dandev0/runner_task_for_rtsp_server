@@ -52,6 +52,8 @@ class Rabbit_listener(Rabbit_base):
             data = ast.literal_eval(str_data)
             command = data['command']
             if command == 'start':
+                logger.error(msg=f'{SERVICE_NAME}: Запуск таски для FFMPEG!',
+                                    extra={extra_name: f"Получамый поток: {data['data']['rtsp_url']} ---> Отдаваемый поток: {data['data']['output_url']}"})
 
                 Create_process_to_ffmpeg(rtsp_url=data['data']['rtsp_url'],
                                          output_url=data['data']['output_url']).create_process_to_ffmpeg()
