@@ -25,8 +25,14 @@ class Ffmpeg_rtsp:
             args = shlex.split(command)
             p = subprocess.Popen(args, stdout=subprocess.PIPE)
             p.communicate()[0]
-            logger.info(msg=f'Ffmpeg run task!!!',
-                        extra={extra_name: f'{command}'})
+            while True:
+                childpoolprocess = p.poll()
+                if childpoolprocess is not None:
+                    logger.warning(msg=f'Процесс рестриминга через ffmpeg + rtsp server упал!!',
+                                   extra={extra_name: f'Task {command} is dead! Перезапуск процесса.'})
+                    return self.add_rtsp_camera_to_rtsp_server()
+
+
         except Exception as ex:
             logger.warning(msg=f'Ffmpeg task have a error!!',
                            extra={extra_name: f'Host: {RABBITMQ_IP}  Username: {RABBITMQ_LOGIN}\nError: {ex}'})
